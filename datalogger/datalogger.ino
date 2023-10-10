@@ -2,7 +2,7 @@
 Sketch: datalogger.ino
 Versión: 0.1
 Autor/es:
-Descripción: Datalogger de humedad y temperatura usando sensor DHT.
+Descripción: Datalogger de humedad y temperatura usando sensor DHT y Arduino Nano.
 Licencia: 
 
 TODO: Poner la placa en "sleep" luego de un periodo de inactividad para ahorrar
@@ -25,12 +25,13 @@ energía https://www.gammon.com.au/power
 #define d6 5
 #define d7 4
 
-#define dht_pin 3
-#define int_pin 19
-#define sd_pin 53
+#define dht_pin 14
+#define int_pin 2
+#define sd_pin 15
+#define led_pin 13
 
 //Intervalo para lectura de datos (días, horas, minutos, segundos)
-TimeSpan interval = TimeSpan(0, 0, 0, 5); 
+TimeSpan interval = TimeSpan(0, 0, 0, 10); 
 DateTime now;
 volatile float tt;
 volatile float hh;
@@ -80,6 +81,7 @@ void setup() {
     //Las siguientes mediciones continuan con el intervalo elegido en "interval"
     rtc.setAlarm1(now + interval, DS3231_A1_Second);
     
+    pinMode(led_pin, OUTPUT);
     pinMode(int_pin, INPUT_PULLUP);
     //Modo FALLING para evitar que la interrupción se active al desacativar la alarma
     attachInterrupt(digitalPinToInterrupt(int_pin), int0_isr, FALLING);
@@ -112,13 +114,15 @@ void loop() {
 }
 
 void write_sd() {
-   File datalog = SD.open("datalog.csv", FILE_WRITE);
-   datalog.print(now.timestamp(DateTime::TIMESTAMP_DATE));
-   datalog.print(",");
-   datalog.print(now.timestamp(DateTime::TIMESTAMP_TIME));
-   datalog.print(",");
-   datalog.print(tt);
-   datalog.print(",");
-   datalog.println(hh);
-   datalog.close();
+    digitalWrite(led_pin, HIGH);
+    File datalog = SD.open("datalog.csv", FILE_WRITE);
+    datalog.print(now.timestamp(DateTime::TIMESTAMP_DATE));
+    datalog.print(",");
+    datalog.print(now.timestamp(DateTime::TIMESTAMP_TIME));
+    datalog.print(",");
+    datalog.print(tt);
+    datalog.print(",");
+    datalog.println(hh);
+    datalog.close();
+    digitalWrite(led_pin, LOW);
 }

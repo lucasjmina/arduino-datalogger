@@ -29,22 +29,29 @@ energía https://www.gammon.com.au/power
 #define int_pin 2
 #define sd_pin 15
 #define led_pin 13
+#define bclk_pin 16
+#define button_pin 3
 
 //Intervalo para lectura de datos (días, horas, minutos, segundos)
-TimeSpan interval = TimeSpan(0, 0, 0, 10); 
+TimeSpan interval = TimeSpan(0, 0, 0, 10);
 DateTime now;
-volatile float tt;
-volatile float hh;
+unsigned long currrent_millis = 0;
+float tt;
+float hh;
+int count = 1;
 volatile bool write = false;
+volatile bool show_lcd = false;
 
 LiquidCrystal lcd(rs, rw, en, d4, d5, d6, d7);
 DHT dht(dht_pin, DHT11);
 RTC_DS3231 rtc;
 
-void int0_isr() {
-    tt = dht.readTemperature();
-    hh = dht.readHumidity();
+void int00_isr() {
     write = true;
+}
+
+void int01_isr() {
+    show_lcd = true;
 }
 
 void setup() {
@@ -52,6 +59,9 @@ void setup() {
     TODO: Agregar alguna forma para chequear que los sensores y modulos esten
     conectados/funcionen correctamente
     */
+    Serial.begin(9600);
+    pinMode(bclk_pin, OUTPUT);
+    digitalWrite(bclk_pin, HIGH);
     lcd.begin(16, 2);
     dht.begin();
     rtc.begin();
@@ -59,10 +69,9 @@ void setup() {
         lcd.print("Check SD card");
         while(1);
     }
-
     //Header para el csv
     File datalog = SD.open("datalog.csv", FILE_WRITE);
-    datalog.println("fecha,hora,temperatura,humedad");
+    datalog.println("numero,fecha,hora,temperatura,humedad");
     datalog.close();
 
     //Descomentar para sincronizar la hora del RTC con el sistema
@@ -83,39 +92,55 @@ void setup() {
     
     pinMode(led_pin, OUTPUT);
     pinMode(int_pin, INPUT_PULLUP);
+    pinMode(button_pin, INPUT_PULLUP);
     //Modo FALLING para evitar que la interrupción se active al desacativar la alarma
-    attachInterrupt(digitalPinToInterrupt(int_pin), int0_isr, FALLING);
+    attachInterrupt(digitalPinToInterrupt(int_pin), int00_isr, FALLING);
+    attachInterrupt(digitalPinToInterrupt(button_pin), int01_isr, FALLING);
+    
 }
 
 void loop() {
-    /*
-    TODO: Leer sensores y mostrar valores en LCD unicamente al presionar un boton
-    y apagarlo luego de un periodo de inactividad (usando otro interrupt?)
-    */
-    tt = dht.readTemperature();
-    String temp_0 = "T: ";
-    String temp = temp_0 + tt + " C";
-    lcd.setCursor(0, 0);
-    lcd.print(temp);
-    hh = dht.readHumidity();
-    String hum_0 = "HH: ";
-    String hum = hum_0 + hh + " %";
-    lcd.setCursor(0, 1);
-    lcd.print(hum);
+    if (show_lcd) {
+        tt = dht.readTemperature();
+        hh = dht.readHumidity();
+        lcd.setCursor(0, 0);
+        lcd.print("T:");
+        lcd.setCursor(3, 0);
+        lcd.print(tt);
+        lcd.setCursor(9, 0);
+        lcd.print("C");
+        lcd.setCursor(0, 1);
+        lcd.print("H:");
+        lcd.setCursor(3, 1);
+        lcd.print(hh);
+        lcd.setCursor(9, 1);
+        lcd.print("%");
+        digitalWrite(bclk_pin, HIGH);
+        currrent_millis = millis();
+        show_lcd = false;
+    }
+    else if (millis() >= currrent_millis+3000) {
+        digitalWrite(bclk_pin, LOW);
+    }
 
     if (write) {
         now = rtc.now();
+        tt = dht.readTemperature();
+        hh = dht.readHumidity();
         rtc.disableAlarm(1);
         rtc.clearAlarm(1);
         rtc.setAlarm1(now + interval, DS3231_A1_Second);
         write_sd();
         write = false;
+        count++;
     }
 }
 
 void write_sd() {
     digitalWrite(led_pin, HIGH);
     File datalog = SD.open("datalog.csv", FILE_WRITE);
+    datalog.print(count);
+    datalog.print(",");
     datalog.print(now.timestamp(DateTime::TIMESTAMP_DATE));
     datalog.print(",");
     datalog.print(now.timestamp(DateTime::TIMESTAMP_TIME));

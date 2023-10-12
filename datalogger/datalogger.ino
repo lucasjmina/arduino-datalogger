@@ -34,8 +34,8 @@ energía https://www.gammon.com.au/power
 
 //Intervalo para lectura de datos (días, horas, minutos, segundos)
 TimeSpan interval = TimeSpan(0, 0, 0, 10);
-DateTime now;
-unsigned long currrent_millis = 0;
+DateTime time_now;
+unsigned long previous_millis;
 float tt;
 float hh;
 int count = 1;
@@ -84,11 +84,11 @@ void setup() {
     rtc.disableAlarm(2);
     rtc.clearAlarm(1);
     rtc.clearAlarm(2);
-    now = rtc.now();
+    time_now = rtc.now();
     //Intervalo para la primer medición, se puede usar uno más corto, por ejemplo
-    //un minuto: rtc.SetAlarm1(now + TimeSpan(0, 0, 1, 0), DS3231_A1_Second)
+    //un minuto: rtc.SetAlarm1(time_now + TimeSpan(0, 0, 1, 0), DS3231_A1_Second)
     //Las siguientes mediciones continuan con el intervalo elegido en "interval"
-    rtc.setAlarm1(now + interval, DS3231_A1_Second);
+    rtc.setAlarm1(time_now + interval, DS3231_A1_Second);
     
     pinMode(led_pin, OUTPUT);
     pinMode(int_pin, INPUT_PULLUP);
@@ -104,32 +104,28 @@ void loop() {
         tt = dht.readTemperature();
         hh = dht.readHumidity();
         lcd.setCursor(0, 0);
-        lcd.print("T:");
-        lcd.setCursor(3, 0);
+        lcd.print("T: ");
         lcd.print(tt);
-        lcd.setCursor(9, 0);
-        lcd.print("C");
+        lcd.print(" C");
         lcd.setCursor(0, 1);
-        lcd.print("H:");
-        lcd.setCursor(3, 1);
+        lcd.print("H: ");
         lcd.print(hh);
-        lcd.setCursor(9, 1);
-        lcd.print("%");
+        lcd.print(" %");
         digitalWrite(bclk_pin, HIGH);
-        currrent_millis = millis();
+        previous_millis = millis();
         show_lcd = false;
     }
-    else if (millis() >= currrent_millis+3000) {
+    else if (millis() - previous_millis >= 3000) {
         digitalWrite(bclk_pin, LOW);
     }
 
     if (write) {
-        now = rtc.now();
+        time_now = rtc.now();
         tt = dht.readTemperature();
         hh = dht.readHumidity();
         rtc.disableAlarm(1);
         rtc.clearAlarm(1);
-        rtc.setAlarm1(now + interval, DS3231_A1_Second);
+        rtc.setAlarm1(time_now + interval, DS3231_A1_Second);
         write_sd();
         write = false;
         count++;
@@ -141,9 +137,9 @@ void write_sd() {
     File datalog = SD.open("datalog.csv", FILE_WRITE);
     datalog.print(count);
     datalog.print(",");
-    datalog.print(now.timestamp(DateTime::TIMESTAMP_DATE));
+    datalog.print(time_now.timestamp(DateTime::TIMESTAMP_DATE));
     datalog.print(",");
-    datalog.print(now.timestamp(DateTime::TIMESTAMP_TIME));
+    datalog.print(time_now.timestamp(DateTime::TIMESTAMP_TIME));
     datalog.print(",");
     datalog.print(tt);
     datalog.print(",");

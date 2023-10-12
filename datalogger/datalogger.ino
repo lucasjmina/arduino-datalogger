@@ -5,8 +5,11 @@ Autor/es:
 Descripción: Datalogger de humedad y temperatura usando sensor DHT y Arduino Nano.
 Licencia: 
 
-TEST: Medir consumo en "sleep"
-https://www.gammon.com.au/power
+TODO:
+ - Medir consumo en "sleep" https://www.gammon.com.au/power
+ - Poner un límite de mediciones usando conteo o una fecha/hora (usando alarma 2 del RTC?) 
+ - Agregar alguna forma para chequear que los sensores y módulos estén conectados/funcionen
+ correctamente
 */
 
 #include <Wire.h>
@@ -34,7 +37,7 @@ https://www.gammon.com.au/power
 #define button_pin 3
 
 //Intervalo para lectura de datos (días, horas, minutos, segundos)
-TimeSpan interval = TimeSpan(0, 0, 0, 15);
+TimeSpan interval = TimeSpan(0, 0, 0, 10);
 DateTime time_now;
 unsigned long previous_millis;
 float tt;
@@ -58,10 +61,6 @@ void int01_isr() {
 }
 
 void setup() {
-    /*
-    TODO: Agregar alguna forma para chequear que los sensores y modulos esten
-    conectados/funcionen correctamente
-    */
     Serial.begin(9600);
     pinMode(bclk_pin, OUTPUT);
     digitalWrite(bclk_pin, HIGH);
@@ -69,7 +68,11 @@ void setup() {
     dht.begin();
     rtc.begin();
     if (!SD.begin(sd_pin)) {
-        lcd.print("Check SD card");
+        lcd.print("SD?");
+        while(1);
+    }
+    if (SD.exists("datalog.csv")) {
+        lcd.print("El archivo ya existe!");
         while(1);
     }
     //Header para el csv
@@ -135,7 +138,7 @@ void loop() {
     }
     //No suspender si el LCD está encendido
     if (digitalRead(bclk_pin) == LOW) {
-        sleepy_time();
+        sleep();
     }
 }
 
@@ -155,7 +158,7 @@ void write_sd() {
     digitalWrite(led_pin, LOW);
 }
 
-void sleepy_time() {
+void sleep() {
     noInterrupts();
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     sleep_enable();

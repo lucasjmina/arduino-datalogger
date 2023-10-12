@@ -5,8 +5,8 @@ Autor/es:
 Descripción: Datalogger de humedad y temperatura usando sensor DHT y Arduino Nano.
 Licencia: 
 
-TODO: Poner la placa en "sleep" luego de un periodo de inactividad para ahorrar
-energía https://www.gammon.com.au/power
+TEST: Medir consumo en "sleep"
+https://www.gammon.com.au/power
 */
 
 #include <Wire.h>
@@ -15,6 +15,7 @@ energía https://www.gammon.com.au/power
 #include <DHT.h>
 #include <SD.h>
 #include <SPI.h>
+#include <avr/sleep.h>
 
 //Pines LCD
 #define rs 10
@@ -33,7 +34,7 @@ energía https://www.gammon.com.au/power
 #define button_pin 3
 
 //Intervalo para lectura de datos (días, horas, minutos, segundos)
-TimeSpan interval = TimeSpan(0, 0, 0, 10);
+TimeSpan interval = TimeSpan(0, 0, 0, 15);
 DateTime time_now;
 unsigned long previous_millis;
 float tt;
@@ -47,10 +48,12 @@ DHT dht(dht_pin, DHT11);
 RTC_DS3231 rtc;
 
 void int00_isr() {
+    sleep_disable();
     write = true;
 }
 
 void int01_isr() {
+    sleep_disable();
     show_lcd = true;
 }
 
@@ -100,6 +103,18 @@ void setup() {
 }
 
 void loop() {
+    if (write) {
+        time_now = rtc.now();
+        tt = dht.readTemperature();
+        hh = dht.readHumidity();
+        rtc.disableAlarm(1);
+        rtc.clearAlarm(1);
+        rtc.setAlarm1(time_now + interval, DS3231_A1_Second);
+        write_sd();
+        write = false;
+        count++;
+    }
+
     if (show_lcd) {
         tt = dht.readTemperature();
         hh = dht.readHumidity();
@@ -118,17 +133,9 @@ void loop() {
     else if (millis() - previous_millis >= 3000) {
         digitalWrite(bclk_pin, LOW);
     }
-
-    if (write) {
-        time_now = rtc.now();
-        tt = dht.readTemperature();
-        hh = dht.readHumidity();
-        rtc.disableAlarm(1);
-        rtc.clearAlarm(1);
-        rtc.setAlarm1(time_now + interval, DS3231_A1_Second);
-        write_sd();
-        write = false;
-        count++;
+    //No suspender si el LCD está encendido
+    if (digitalRead(bclk_pin) == LOW) {
+        sleepy_time();
     }
 }
 
@@ -146,4 +153,12 @@ void write_sd() {
     datalog.println(hh);
     datalog.close();
     digitalWrite(led_pin, LOW);
+}
+
+void sleepy_time() {
+    noInterrupts();
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    sleep_enable();
+    interrupts();
+    sleep_cpu();
 }

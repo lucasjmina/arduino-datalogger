@@ -38,13 +38,9 @@ TODO:
 
 //Intervalo para lectura de datos (días, horas, minutos, segundos)
 TimeSpan interval = TimeSpan(0, 0, 0, 10);
-DateTime time_now;
-unsigned long previous_millis;
-float tt;
-float hh;
 int count = 1;
 volatile bool write = false;
-volatile bool show_lcd = false;
+volatile bool lcd_on = false;
 
 LiquidCrystal lcd(rs, rw, en, d4, d5, d6, d7);
 DHT dht(dht_pin, DHT11);
@@ -57,7 +53,7 @@ void int00_isr() {
 
 void int01_isr() {
     sleep_disable();
-    show_lcd = true;
+    lcd_on = true;
 }
 
 void setup() {
@@ -72,7 +68,7 @@ void setup() {
         while(1);
     }
     if (SD.exists("datalog.csv")) {
-        lcd.print("El archivo ya existe!");
+        lcd.print("Archivo existe!");
         while(1);
     }
     //Header para el csv
@@ -90,11 +86,10 @@ void setup() {
     rtc.disableAlarm(2);
     rtc.clearAlarm(1);
     rtc.clearAlarm(2);
-    time_now = rtc.now();
     //Intervalo para la primer medición, se puede usar uno más corto, por ejemplo
     //un minuto: rtc.SetAlarm1(time_now + TimeSpan(0, 0, 1, 0), DS3231_A1_Second)
     //Las siguientes mediciones continuan con el intervalo elegido en "interval"
-    rtc.setAlarm1(time_now + interval, DS3231_A1_Second);
+    rtc.setAlarm1(rtc.now() + interval, DS3231_A1_Second);
     
     pinMode(led_pin, OUTPUT);
     pinMode(int_pin, INPUT_PULLUP);
@@ -106,6 +101,11 @@ void setup() {
 }
 
 void loop() {
+    DateTime time_now;
+    float tt;
+    float hh;
+    unsigned long previous_millis;
+
     if (write) {
         time_now = rtc.now();
         tt = dht.readTemperature();
@@ -113,12 +113,26 @@ void loop() {
         rtc.disableAlarm(1);
         rtc.clearAlarm(1);
         rtc.setAlarm1(time_now + interval, DS3231_A1_Second);
-        write_sd();
+
+        digitalWrite(led_pin, HIGH);
+        File datalog = SD.open("datalog.csv", FILE_WRITE);
+        datalog.print(count);
+        datalog.print(",");
+        datalog.print(time_now.timestamp(DateTime::TIMESTAMP_DATE));
+        datalog.print(",");
+        datalog.print(time_now.timestamp(DateTime::TIMESTAMP_TIME));
+        datalog.print(",");
+        datalog.print(tt);
+        datalog.print(",");
+        datalog.println(hh);
+        datalog.close();
+        digitalWrite(led_pin, LOW);
+
         write = false;
         count++;
     }
 
-    if (show_lcd) {
+    if (lcd_on) {
         tt = dht.readTemperature();
         hh = dht.readHumidity();
         lcd.setCursor(0, 0);
@@ -131,7 +145,7 @@ void loop() {
         lcd.print(" %");
         digitalWrite(bclk_pin, HIGH);
         previous_millis = millis();
-        show_lcd = false;
+        lcd_on = false;
     }
     else if (millis() - previous_millis >= 3000) {
         digitalWrite(bclk_pin, LOW);
@@ -140,22 +154,6 @@ void loop() {
     if (digitalRead(bclk_pin) == LOW) {
         sleep();
     }
-}
-
-void write_sd() {
-    digitalWrite(led_pin, HIGH);
-    File datalog = SD.open("datalog.csv", FILE_WRITE);
-    datalog.print(count);
-    datalog.print(",");
-    datalog.print(time_now.timestamp(DateTime::TIMESTAMP_DATE));
-    datalog.print(",");
-    datalog.print(time_now.timestamp(DateTime::TIMESTAMP_TIME));
-    datalog.print(",");
-    datalog.print(tt);
-    datalog.print(",");
-    datalog.println(hh);
-    datalog.close();
-    digitalWrite(led_pin, LOW);
 }
 
 void sleep() {

@@ -37,13 +37,17 @@ TODO:
 #define button_pin 3
 
 //Intervalo para lectura de datos (días, horas, minutos, segundos)
-TimeSpan interval = TimeSpan(0, 0, 0, 10);
+TimeSpan interval = TimeSpan(0, 0, 1, 0);
 int count = 1;
+DateTime time_now;
+float tt;
+float hh;
+unsigned long previous_millis;
 volatile bool write = false;
 volatile bool lcd_on = false;
 
 LiquidCrystal lcd(rs, rw, en, d4, d5, d6, d7);
-DHT dht(dht_pin, DHT11);
+DHT dht(dht_pin, DHT22);
 RTC_DS3231 rtc;
 
 void int00_isr() {
@@ -57,7 +61,6 @@ void int01_isr() {
 }
 
 void setup() {
-    Serial.begin(9600);
     pinMode(bclk_pin, OUTPUT);
     digitalWrite(bclk_pin, HIGH);
     lcd.begin(16, 2);
@@ -89,7 +92,7 @@ void setup() {
     //Intervalo para la primer medición, se puede usar uno más corto, por ejemplo
     //un minuto: rtc.SetAlarm1(time_now + TimeSpan(0, 0, 1, 0), DS3231_A1_Second)
     //Las siguientes mediciones continuan con el intervalo elegido en "interval"
-    rtc.setAlarm1(rtc.now() + interval, DS3231_A1_Second);
+    rtc.setAlarm1(rtc.now() + TimeSpan(0, 0, 0, 3), DS3231_A1_Second);
     
     pinMode(led_pin, OUTPUT);
     pinMode(int_pin, INPUT_PULLUP);
@@ -101,11 +104,6 @@ void setup() {
 }
 
 void loop() {
-    DateTime time_now;
-    float tt;
-    float hh;
-    unsigned long previous_millis;
-
     if (write) {
         time_now = rtc.now();
         tt = dht.readTemperature();

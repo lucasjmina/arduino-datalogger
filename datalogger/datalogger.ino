@@ -32,7 +32,6 @@ TODO:
 #define dht_pin 14
 #define int_pin 2
 #define sd_pin 15
-#define led_pin 13
 #define bclk_pin 16
 #define button_pin 3
 
@@ -94,7 +93,6 @@ void setup() {
     //Las siguientes mediciones continuan con el intervalo elegido en "interval"
     rtc.setAlarm1(rtc.now() + TimeSpan(0, 0, 0, 3), DS3231_A1_Second);
     
-    pinMode(led_pin, OUTPUT);
     pinMode(int_pin, INPUT_PULLUP);
     pinMode(button_pin, INPUT_PULLUP);
     //Modo FALLING para evitar que la interrupción se active al desacativar la alarma
@@ -112,7 +110,6 @@ void loop() {
         rtc.clearAlarm(1);
         rtc.setAlarm1(time_now + interval, DS3231_A1_Second);
 
-        digitalWrite(led_pin, HIGH);
         File datalog = SD.open("datalog.csv", FILE_WRITE);
         datalog.print(count);
         datalog.print(",");
@@ -124,7 +121,6 @@ void loop() {
         datalog.print(",");
         datalog.println(hh);
         datalog.close();
-        digitalWrite(led_pin, LOW);
 
         write = false;
         count++;

@@ -12,6 +12,7 @@ TODO:
  correctamente
 */
 
+#include <Arduino.h>
 #include <Wire.h>
 #include <RTClib.h>
 #include <LiquidCrystal.h>
@@ -57,6 +58,14 @@ void int00_isr() {
 void int01_isr() {
     sleep_disable();
     lcd_on = true;
+}
+
+void sleep_time() {
+    noInterrupts();
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    sleep_enable();
+    interrupts();
+    sleep_cpu();
 }
 
 void setup() {
@@ -146,14 +155,6 @@ void loop() {
     }
     //No suspender si el LCD está encendido
     if (digitalRead(bclk_pin) == LOW) {
-        sleep();
+        sleep_time();
     }
-}
-
-void sleep() {
-    noInterrupts();
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-    sleep_enable();
-    interrupts();
-    sleep_cpu();
 }

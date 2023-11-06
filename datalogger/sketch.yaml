@@ -1,2 +1,0 @@
-default_port: /dev/ttyUSB0
-defaul_fqbn: arduino:avr:nano

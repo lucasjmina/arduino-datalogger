@@ -1,16 +1,15 @@
 /*
-Sketch: datalogger.ino
-Versión: 0.1
-Autor/es:
-Descripción: Datalogger de humedad y temperatura usando sensor DHT y Arduino Nano.
-Licencia: 
-
-TODO:
- - Medir consumo en "sleep" https://www.gammon.com.au/power
- - Poner un límite de mediciones usando conteo o una fecha/hora (usando alarma 2 del RTC?) 
- - Agregar alguna forma para chequear que los sensores y módulos estén conectados/funcionen
- correctamente
-*/
+ * main.cpp
+ * Autor/es:
+ * Descripción: Datalogger de humedad y temperatura usando sensor DHT y Arduino Nano.
+ * Licencia: 
+ *
+ * TODO:
+ * - Medir consumo en "sleep" https://www.gammon.com.au/power
+ * - Poner un límite de mediciones usando conteo o una fecha/hora (usando alarma 2 del RTC?)
+ * - Agregar alguna forma para chequear que los sensores y módulos estén conectados/funcionen
+ * correctamente
+ */
 
 #include <Arduino.h>
 #include <Wire.h>

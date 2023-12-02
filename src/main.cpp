@@ -1,12 +1,12 @@
 /*
  * main.cpp
- * Autor/es:
- * Descripción: Datalogger de humedad y temperatura usando sensor DHT y Arduino Nano.
- * Licencia: 
+ * Autor/es: Lucas J. Mina. Dario D. Larrea & Miriam P. Damborsky
+ * Descripción: Código para prototipo de datalogger de humedad y temperatura usando sensor DHT y 
+ * Arduino Nano. Nombre clave "Oreo".
  *
  * TODO:
- * - Medir consumo en "sleep" https://www.gammon.com.au/power
- * - Poner un límite de mediciones usando conteo o una fecha/hora (usando alarma 2 del RTC?)
+ * - Mejorar sleep para mayor ahorro de energía https://www.gammon.com.au/power
+ * - Límite de mediciones usando conteo o una fecha/hora (usando alarma 2 del RTC?)
  * - Agregar alguna forma para chequear que los sensores y módulos estén conectados/funcionen
  * correctamente
  */
@@ -19,6 +19,9 @@
 #include <SD.h>
 #include <SPI.h>
 #include <avr/sleep.h>
+
+//1 para sincronizar hora del RTC con el sistema
+#define set_time 0
 
 //Pines LCD
 #define rs 10
@@ -73,6 +76,11 @@ void setup() {
     lcd.begin(16, 2);
     dht.begin();
     rtc.begin();
+
+#if set_time == 1
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+#endif
+
     if (!SD.begin(sd_pin)) {
         lcd.print("SD?");
         while(1);
@@ -85,9 +93,6 @@ void setup() {
     File datalog = SD.open("datalog.csv", FILE_WRITE);
     datalog.println("numero,fecha,hora,temperatura,humedad");
     datalog.close();
-
-    //Descomentar para sincronizar la hora del RTC con el sistema
-    //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
     //En "OFF", pin sqw está normalmente alto y baja cuando la alarma "suena"
     rtc.writeSqwPinMode(DS3231_OFF);
@@ -152,8 +157,8 @@ void loop() {
     else if (millis() - previous_millis >= 3000) {
         digitalWrite(bclk_pin, LOW);
     }
-    //No suspender si el LCD está encendido
-    if (digitalRead(bclk_pin) == LOW) {
+    //NO suspender si el LCD está encendido o hay mediciones pendientes
+    if (digitalRead(bclk_pin) == LOW && write == false) {
         sleep_time();
     }
 }

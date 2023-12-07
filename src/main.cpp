@@ -47,6 +47,7 @@ float hh;
 unsigned long previous_millis;
 volatile bool write = false;
 volatile bool lcd_on = false;
+char filename[27] = "YYYMMDDhhmmss_DATALOG.csv";
 
 LiquidCrystal lcd(rs, rw, en, d4, d5, d6, d7);
 DHT dht(dht_pin, DHT22);
@@ -85,12 +86,13 @@ void setup() {
         lcd.print("SD?");
         while(1);
     }
-    if (SD.exists("datalog.csv")) {
-        lcd.print("Archivo existe!");
-        while(1);
-    }
+
+    //Generacion de nombre único usando timestamp
+    time_now = rtc.now();
+    time_now.toString(filename);
+
     //Header para el csv
-    File datalog = SD.open("datalog.csv", FILE_WRITE);
+    File datalog = SD.open(filename, FILE_WRITE);
     datalog.println("numero,fecha,hora,temperatura,humedad");
     datalog.close();
 
@@ -123,7 +125,7 @@ void loop() {
         rtc.clearAlarm(1);
         rtc.setAlarm1(time_now + interval, DS3231_A1_Second);
 
-        File datalog = SD.open("datalog.csv", FILE_WRITE);
+        File datalog = SD.open(filename, FILE_WRITE);
         datalog.print(count);
         datalog.print(",");
         datalog.print(time_now.timestamp(DateTime::TIMESTAMP_DATE));

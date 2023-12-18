@@ -5,11 +5,10 @@
   (paper "A5")
 
   (title_block
-    (title "Prototipo datalogger con Arduino")
-    (date "2023-12-02")
+    (title "Arduino based datalogger prototipe")
+    (date "2023-12-18")
     (rev "0.1")
-    (company "Lab. Biología de los Artrópodos - FaCENA - UNNE")
-    (comment 1 "Autor/es: Lucas J. Mina, Dario D. Larrea y Miryam P. Damborsky")
+    (comment 1 "Author/s: Lucas J. Mina, Dario D. Larrea y Miryam P. Damborsky")
   )
 
   (lib_symbols

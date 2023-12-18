@@ -17,4 +17,4 @@ size:
 	pio run -t size
 
 check:
-	pio run check
+	pio check

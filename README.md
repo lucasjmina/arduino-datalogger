@@ -1,16 +1,12 @@
-# Datalogger basado en Arduino
+# Arduino based datalogger
 
-En estudios ecológicos las variables ambientales son muy importantes debido a que estas afectan
-tanto el ciclo de vida como el comportamiento de los organismos. Obtener un registro confiable de
-estas requiere el uso de dataloggers que pueden ser muy costosos.  
-Nuestro objetivo es desarrollar un datalogger más accesible y versatil que la opciones comerciales,
-lo que permitiria un aumento en el volumen de datos o incluso el acceso a una forma confiable de
-registro a grupos de investigación pequeños.  
-Este repositorio corresponde al primer prototipo, nombre clave "Oreo".
+[![es](https://img.shields.io/badge/lang-es-blue)](README.es.md)
+[![en](https://img.shields.io/badge/lang-en-red)](README.md)
 
-***
-
-Este proyecto fue presentado en las *"II Jornadas Científicas de Ecología y Paleontología"* organizadas
-por el CECOAL entre el 04 y 08 de diciembre del 2023, bajo el título: *"Construyendo Puentes entre
-Biología y Tecnología: desarrollo de dispositivos utilizando Arduino para medición de variables
-ambientales"*
+Enviroment variables are important for ecological studies because they affect the life cicle and
+behaviour of organisms. Obtaining a trustworthy record of these variables require the use of
+dataloggers, that can be quite expensive.  
+Our objective is developing a datalogger more accesible and versatile than comercial available ones,
+this could allow an increase in the data volume or making available a trustworthy way of recording
+enviromental variables for small investigation groups.
+This repository corresponds to the first prototipe, codename "Oreo".

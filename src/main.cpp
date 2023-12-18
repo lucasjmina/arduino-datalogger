@@ -16,7 +16,7 @@
 #include <RTClib.h>
 #include <LiquidCrystal.h>
 #include <DHT.h>
-#include <SD.h>
+#include <SdFat.h>
 #include <SPI.h>
 #include <avr/sleep.h>
 
@@ -47,11 +47,12 @@ float hh;
 unsigned long previous_millis;
 volatile bool write = false;
 volatile bool lcd_on = false;
-char filename[27] = "YYYMMDDhhmmss_DATALOG.csv";
+char filename[27] = "YYYYMMDDhhmmss_DATALOG.csv";
 
 LiquidCrystal lcd(rs, rw, en, d4, d5, d6, d7);
 DHT dht(dht_pin, DHT22);
 RTC_DS3231 rtc;
+SdFat SD;
 
 void int00_isr() {
     sleep_disable();

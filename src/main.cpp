@@ -87,6 +87,19 @@ void setup() {
         while(1);
     }
 
+    //Briefly show SD free space when powerin on
+    //This is slow, maybe there's a better way
+    float free_kb = SD.vol() -> freeClusterCount();
+    free_kb *= SD.vol() -> sectorsPerCluster() / 2.00;
+    float free_gb = free_kb / 1000000.00;
+    lcd.setCursor(0, 0);
+    lcd.print(F("Espacio libre:"));
+    lcd.setCursor(0, 1);
+    lcd.print(free_gb);
+    lcd.print(F(" Gb"));
+    delay(2000);
+    lcd.clear();
+
     //Unique name for new files using timestamp (YYYYMMDDhhmmss_DATALOG.csv)
     time_now = rtc.now();
     time_now.toString(filename);
